@@ -1,0 +1,21 @@
+{{- /* routing 의 auth/rateLimit → KongPlugin. (이전엔 derive.py 가 했음) */ -}}
+{{- range $i, $r := .Values.spec.routing }}
+{{- if $r.rateLimit }}
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: {{ $.Release.Name }}-ratelimit-{{ $i }}
+plugin: rate-limiting
+config:
+  minute: {{ $r.rateLimit.minute }}
+---
+{{- end }}
+{{- if eq ($r.auth | default "") "jwt" }}
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: {{ $.Release.Name }}-jwt-{{ $i }}
+plugin: jwt
+---
+{{- end }}
+{{- end }}

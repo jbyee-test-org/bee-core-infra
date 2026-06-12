@@ -1,0 +1,20 @@
+# bitcert 플랫폼 디스크립터 — **정책 + 배치 데이터**, 좌표 파생 없음.
+#
+# GENESIS 세계의 platform.yaml 은 슬림하다: 좌표(registry·ASM·domain)는 모듈의
+# values-<env> 가 직접 가진다(규칙 3, 수직분할 — prototype 실증). 여기 남는 것은
+# ① chart 지원 범위 정책(G6 — pin 아님, CI lint·CLI 경고의 입력)
+# ② products → namespace 맵(파생이 아니라 배치 데이터 — CLI 의 "어디에" + orient 표시)
+# ③ env 목록.
+# POC 의 중앙 좌표 모델(D22: registry/secrets/ingress/snapshotRepo/capabilities)은
+# 캐리하지 않음 — capabilities(uses/provides)는 Phase 3 어휘 로드맵.
+apiVersion: bee-platform/v1
+kind: Platform
+metadata:
+  name: bitcert
+spec:
+  chart:
+    supported: ">=0.1.0 <0.2.0"
+  envs: [dev, staging, prod]
+  products:
+    shell: { namespace: ann-platform }      # 공통 셸 제품군 (구 제품명 — 도구 개명과 무관, G4)
+    attest: { namespace: bitcert-attest }   # bitcert-attest 제품 (ingestion/batching/…)

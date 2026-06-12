@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "bee-module merged values (module.yaml + values-<env>)",
+  "description": "helm 에 -f module.yaml -f values-<env>.yaml 로 병합 입력되는 문서의 계약. required 는 최소만 — 어휘 확장은 additive(GENESIS G 어휘 로드맵).",
+  "type": "object",
+  "required": ["metadata", "spec", "env", "registry", "host"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "required": ["image", "chart"],
+      "properties": {
+        "image": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 }
+          }
+        },
+        "chart": {
+          "type": "object",
+          "required": ["version"],
+          "properties": {
+            "version": { "type": "string", "minLength": 1 }
+          },
+          "description": "모듈의 chart 버전 pin (G6 — 모듈 pin 일원화). 불일치는 CLI 경고 + CI lint."
+        },
+        "product": { "type": "string" },
+        "dependsOn": { "type": "array", "items": { "type": "string" } },
+        "routing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "port"],
+            "properties": {
+              "path": { "type": "string" },
+              "port": { "type": "integer" },
+              "auth": { "type": "string" },
+              "rateLimit": { "type": "object" }
+            }
+          }
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["group", "property"],
+            "properties": {
+              "group": { "type": "string" },
+              "property": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "env": { "type": "string", "minLength": 1 },
+    "registry": { "type": "string", "minLength": 1 },
+    "imageTag": { "type": "string" },
+    "imageDigest": { "type": "string" },
+    "host": { "type": "string", "minLength": 1 },
+    "ingressClass": { "type": "string" },
+    "asmPrefix": { "type": "string" },
+    "secretStore": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    }
+  }
+}

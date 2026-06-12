@@ -1,0 +1,22 @@
+{{- /* routing → Ingress (host=values-env 좌표, paths=module.yaml 논리, class=values-env) */ -}}
+{{- if .Values.spec.routing }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  ingressClassName: {{ .Values.ingressClass }}
+  rules:
+    - host: {{ .Values.host }}
+      http:
+        paths:
+          {{- range .Values.spec.routing }}
+          - path: {{ .path }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}
+                port:
+                  number: {{ .port }}
+          {{- end }}
+{{- end }}
