@@ -1,0 +1,15 @@
+# 얇은 caller (G5) — 로직은 전부 core-infra 의 재사용 워크플로에. 보간은 env 패턴만.
+name: publish-dev
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  publish:
+    permissions:
+      contents: read
+      packages: write
+    uses: jbyee-test-org/bee-core-infra/.github/workflows/module-publish.yaml@main
+    with: { module: __MODULE__ }
+    secrets:
+      SNAPSHOT_KEY: ${{ secrets.SNAPSHOT_DEPLOY_KEY }}
