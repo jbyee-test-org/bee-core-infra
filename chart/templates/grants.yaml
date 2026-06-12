@@ -7,6 +7,11 @@ kind: ConfigMap
 metadata:
   name: {{ $.Release.Name }}-grants
   namespace: {{ include "bee.namespace" $ }}
+  annotations:
+    # PreSync Job(flyway)이 마운트 — 본 sync 전에 존재해야 한다(wave -1 < Job 0)
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 data:
   R__grants.sql: |
     DO $do$ BEGIN CREATE ROLE "bee_{{ $.Release.Name }}"; EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
