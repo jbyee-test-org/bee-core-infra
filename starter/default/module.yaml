@@ -4,7 +4,7 @@ metadata:
 spec:
   product: attest               # platform.yaml products 의 키 — 배치 namespace 가 정해진다
   chart:
-    version: "0.2.0"            # bee-module pin (G6) — starter 는 chart 와 공동 버전(G5)
+    version: "0.3.0"            # bee-module pin (G6) — starter 는 chart 와 공동 버전(G5)
   image:
     name: __MODULE__
   dependsOn: []

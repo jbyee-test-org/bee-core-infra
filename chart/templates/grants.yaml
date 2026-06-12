@@ -1,0 +1,21 @@
+{{- /* grants 어휘 → R__grants.sql 파생 (규칙 1 — 차트가 한다). 모듈 role = bee_<module>.
+       대상 schema 가 아직 없으면 Job 이 재시도(backoff) — 소유 모듈 migrate 후 수렴. */ -}}
+{{- with .Values.spec.db }}
+{{- if .grants }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-grants
+  namespace: {{ include "bee.namespace" $ }}
+data:
+  R__grants.sql: |
+    DO $do$ BEGIN CREATE ROLE "bee_{{ $.Release.Name }}"; EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
+    {{- range .grants }}
+    GRANT USAGE ON SCHEMA {{ .schema }} TO "bee_{{ $.Release.Name }}";
+    {{- if eq (.access | default "read") "read" }}
+    GRANT SELECT ON ALL TABLES IN SCHEMA {{ .schema }} TO "bee_{{ $.Release.Name }}";
+    ALTER DEFAULT PRIVILEGES IN SCHEMA {{ .schema }} GRANT SELECT ON TABLES TO "bee_{{ $.Release.Name }}";
+    {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}

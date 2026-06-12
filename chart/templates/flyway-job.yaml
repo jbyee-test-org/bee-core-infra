@@ -1,0 +1,46 @@
+{{- /* db 어휘 → 모듈별 Flyway Job (G14③ — 모듈별 history, 전역 합집합은 Phase 4 재론).
+       dev 는 ArgoCD PreSync hook(구 D10), 로컬은 bee up 이 적용. SQL 은 bee 가 kubectl
+       위임으로 만든 <module>-migrations ConfigMap(G14②) + chart 파생 grants ConfigMap. */ -}}
+{{- with .Values.spec.db }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $.Release.Name }}-migrate
+  namespace: {{ include "bee.namespace" $ }}
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: flyway
+          image: flyway/flyway:10-alpine
+          args:
+            - -url=jdbc:postgresql://{{ $.Values.dbHost }}:5432/{{ $.Values.dbName | default "bee" }}
+            - -user={{ $.Values.dbUser | default "bee" }}
+            - -password={{ $.Values.dbPassword | default "bee-demo" }}{{- /* 데모 — 실환경은 ESO(D13) */}}
+            - -connectRetries=30
+            - -table=flyway_history_{{ $.Release.Name }}{{- /* 모듈별 history (G14③) */}}
+            - -locations={{ if .migrations }}filesystem:/sql{{ end }}{{ if and .migrations .grants }},{{ end }}{{ if .grants }}filesystem:/grants{{ end }}
+            - -baselineOnMigrate=true
+            - migrate
+          volumeMounts:
+            {{- if .migrations }}
+            - { name: sql, mountPath: /sql }
+            {{- end }}
+            {{- if .grants }}
+            - { name: grants, mountPath: /grants }
+            {{- end }}
+      volumes:
+        {{- if .migrations }}
+        - name: sql
+          configMap: { name: {{ $.Release.Name }}-migrations }
+        {{- end }}
+        {{- if .grants }}
+        - name: grants
+          configMap: { name: {{ $.Release.Name }}-grants }
+        {{- end }}
+{{- end }}
