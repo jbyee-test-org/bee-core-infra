@@ -90,5 +90,10 @@ jobs:
           # 죽으면 모듈 단위 bump 스윕이 불가능(닭-달걀). env 전반 정합은 별도 관심사.
           bash core-infra/ci/gate1.sh "snapshot/envs/$TARGET_ENV/$MODULE"
 
-      - name: snapshot push (게이트1 통과 시에만)
-        run: git -C snapshot push
+      - name: snapshot push (게이트1 통과 시에만 — 동시 publish 레이스는 rebase 재시도)
+        run: |
+          for i in 1 2 3; do
+            git -C snapshot push && exit 0
+            git -C snapshot pull --rebase
+          done
+          git -C snapshot push
