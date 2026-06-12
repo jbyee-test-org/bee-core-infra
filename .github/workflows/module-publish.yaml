@@ -62,12 +62,15 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/uv" tool install "git+https://github.com/$OWNER/bee-cli"
 
-      - name: headless 워크스페이스 구성
+      - name: headless 워크스페이스 구성 (chart = OCI 소비, G6 — 모듈 pin 이 --version)
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "$TOKEN" | helm registry login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           cat > bee.workspace.yaml <<EOF
           version: 1
           snapshot: { repo: snapshot, env: $TARGET_ENV, ref: main }
-          coreInfra: { path: core-infra, platform: bitcert }
+          coreInfra: { path: core-infra, platform: bitcert, chartRef: "oci://ghcr.io/$OWNER/charts/bee-module" }
           local:
             $MODULE: { path: module }
           EOF
