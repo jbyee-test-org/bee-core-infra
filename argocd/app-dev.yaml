@@ -1,0 +1,29 @@
+# dev 공유환경 Application — 스냅샷이 SoT, ArgoCD 가 유일한 적용자(G5·G7).
+# 소스 = bee-snapshot/envs/dev (Rendered Manifests Pattern). module.yaml·provenance.yaml 은
+# k8s 리소스가 아니므로 제외 — 메타는 bee CLI·게이트가 소비한다(G9).
+#
+# 알려진 단순화(Phase 3 과제): 렌더에 metadata.namespace 가 없어 destination.namespace 로
+# 일괄 배치 — 다제품(product→ns 다중) 시 chart 가 namespace 를 렌더하도록 확장 필요.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bee-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jbyee-test-org/bee-snapshot
+    targetRevision: main
+    path: envs/dev
+    directory:
+      recurse: true
+      exclude: "{**/module.yaml,**/provenance.yaml}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bitcert-attest
+  syncPolicy:
+    automated:
+      prune: true        # 스냅샷에서 사라진 모듈 = 클러스터에서 제거 (SoT 일치)
+      selfHeal: true     # 드리프트 자동 복원 — ArgoCD 네이티브 위임 (구 D11)
+    syncOptions:
+      - CreateNamespace=true
