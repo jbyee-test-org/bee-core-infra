@@ -7,9 +7,11 @@ ENV_DIR="$1"
 CI_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLATFORM="${2:-$CI_DIR/../platforms/bitcert/platform.yaml}"
 
-echo "── 게이트1: kubeconform (스키마) ──"
+echo "── 게이트1: kubeconform (스키마 — CRD 는 datree 카탈로그, 미등재는 통과·conftest 가 보완) ──"
 find "$ENV_DIR" -name '*.yaml' ! -name module.yaml ! -name provenance.yaml -print0 \
-  | xargs -0 kubeconform -strict -summary
+  | xargs -0 kubeconform -strict -summary -ignore-missing-schemas \
+      -schema-location default \
+      -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
 
 echo "── 게이트1: conftest (매니페스트 정책) ──"
 find "$ENV_DIR" -name '*.yaml' ! -name module.yaml ! -name provenance.yaml -print0 \

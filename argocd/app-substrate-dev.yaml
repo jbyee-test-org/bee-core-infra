@@ -1,0 +1,24 @@
+# dev substrate Application — substrate 의 SoT 는 core-infra(선언 데이터, G12③).
+# 렌더 산출물이 아니므로 snapshot 이 아니라 core-infra 를 직접 watch 한다.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bee-substrate-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jbyee-test-org/bee-core-infra
+    targetRevision: main
+    path: substrate
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true   # NACK CRD 가 client-side annotation 한도 초과

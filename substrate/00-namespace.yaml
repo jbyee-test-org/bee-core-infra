@@ -1,0 +1,6 @@
+# substrate — 공유 인프라 선언 데이터(G12③). 적용: dev=ArgoCD App · 로컬=kubectl apply -R 1회.
+# CLI 무관여 — 합성 로직 0 (POC materialize 의 재림 방지).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bee-substrate

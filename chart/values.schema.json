@@ -3,7 +3,7 @@
   "title": "bee-module merged values (module.yaml + values-<env>)",
   "description": "helm 에 -f module.yaml -f values-<env>.yaml 로 병합 입력되는 문서의 계약. required 는 최소만 — 어휘 확장은 additive(GENESIS G 어휘 로드맵).",
   "type": "object",
-  "required": ["metadata", "spec", "env", "registry", "host"],
+  "required": ["metadata", "spec", "env", "registry", "host", "namespace"],
   "properties": {
     "metadata": {
       "type": "object",
@@ -46,6 +46,34 @@
             }
           }
         },
+        "events": {
+          "type": "object",
+          "description": "이벤트 어휘(0.2.0, G12②) — {stream, subject} 명시 객체. publishes=스트림 소유, consumes=durable Consumer.",
+          "properties": {
+            "publishes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["stream", "subject"],
+                "properties": {
+                  "stream": { "type": "string", "minLength": 1 },
+                  "subject": { "type": "string", "minLength": 1 }
+                }
+              }
+            },
+            "consumes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["stream", "subject"],
+                "properties": {
+                  "stream": { "type": "string", "minLength": 1 },
+                  "subject": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        },
         "secrets": {
           "type": "array",
           "items": {
@@ -58,6 +86,11 @@
           }
         }
       }
+    },
+    "namespace": {
+      "type": "string",
+      "minLength": 1,
+      "description": "배치 좌표 — bee up/publish 가 platform product→ns 룩업으로 주입(G12④). 모듈 파일에 쓰지 않는다."
     },
     "env": { "type": "string", "minLength": 1 },
     "registry": { "type": "string", "minLength": 1 },

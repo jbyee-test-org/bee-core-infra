@@ -1,9 +1,20 @@
-{{- /* routing → Ingress (host=values-env 좌표, paths=module.yaml 논리, class=values-env) */ -}}
+{{- /* routing → Ingress (host=values-env 좌표, paths=module.yaml 논리, class=values-env)
+       + KongPlugin 연결 주석(konghq.com/plugins) — 파생은 전부 여기(규칙 1) */ -}}
 {{- if .Values.spec.routing }}
+{{- $plugins := list }}
+{{- range $i, $r := .Values.spec.routing }}
+{{- if $r.rateLimit }}{{- $plugins = append $plugins (printf "%s-ratelimit-%d" $.Release.Name $i) }}{{- end }}
+{{- if eq ($r.auth | default "") "jwt" }}{{- $plugins = append $plugins (printf "%s-jwt-%d" $.Release.Name $i) }}{{- end }}
+{{- end }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Release.Name }}
+  namespace: {{ include "bee.namespace" $ }}
+  {{- if $plugins }}
+  annotations:
+    konghq.com/plugins: {{ join "," $plugins | quote }}
+  {{- end }}
 spec:
   ingressClassName: {{ .Values.ingressClass }}
   rules:

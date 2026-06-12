@@ -5,6 +5,7 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: {{ $.Release.Name }}-ratelimit-{{ $i }}
+  namespace: {{ include "bee.namespace" $ }}
 plugin: rate-limiting
 config:
   minute: {{ $r.rateLimit.minute }}
@@ -15,6 +16,7 @@ apiVersion: configuration.konghq.com/v1
 kind: KongPlugin
 metadata:
   name: {{ $.Release.Name }}-jwt-{{ $i }}
+  namespace: {{ include "bee.namespace" $ }}
 plugin: jwt
 ---
 {{- end }}

@@ -1,0 +1,17 @@
+{{- /* events.consumes → NACK durable Consumer (구독자 = 모듈명 durable). */ -}}
+{{- with .Values.spec.events }}
+{{- range .consumes }}
+apiVersion: jetstream.nats.io/v1beta2
+kind: Consumer
+metadata:
+  name: {{ $.Release.Name }}-{{ .stream | lower }}
+  namespace: {{ include "bee.namespace" $ }}
+spec:
+  streamName: {{ .stream }}
+  durableName: {{ $.Release.Name }}
+  filterSubject: {{ .subject | quote }}
+  deliverPolicy: all
+  ackPolicy: explicit
+---
+{{- end }}
+{{- end }}

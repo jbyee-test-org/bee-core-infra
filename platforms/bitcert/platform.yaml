@@ -13,7 +13,7 @@ metadata:
   name: bitcert
 spec:
   chart:
-    supported: ">=0.1.0 <0.2.0"
+    supported: ">=0.2.0 <0.3.0"   # 0.2.0 bump — G6 절차 첫 리허설(G12④)
   envs: [dev, staging, prod]
   products:
     shell: { namespace: ann-platform }      # 공통 셸 제품군 (구 제품명 — 도구 개명과 무관, G4)

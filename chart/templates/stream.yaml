@@ -1,0 +1,17 @@
+{{- /* events.publishes → NACK Stream — 발행자가 스트림을 소유한다(POC B안 정렬).
+       어휘는 {stream, subject} 명시 객체 — thin 세계엔 subject→stream 중앙 룩업이 없다(규칙 4). */ -}}
+{{- with .Values.spec.events }}
+{{- range .publishes }}
+apiVersion: jetstream.nats.io/v1beta2
+kind: Stream
+metadata:
+  name: {{ .stream | lower }}
+  namespace: {{ include "bee.namespace" $ }}
+spec:
+  name: {{ .stream }}
+  subjects: [{{ .subject | quote }}]
+  storage: file
+  replicas: 1
+---
+{{- end }}
+{{- end }}

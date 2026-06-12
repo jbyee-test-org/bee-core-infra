@@ -1,0 +1,74 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jetstream-controller
+  namespace: bee-substrate
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jetstream-controller-cluster-role
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - events
+  verbs:
+  - create
+  - update
+  - patch
+- apiGroups:
+  - ''
+  resources:
+  - secrets
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - jetstream.nats.io
+  resources:
+  - streams
+  - streams/status
+  - objectstores
+  - objectstores/status
+  - keyvalues
+  - keyvalues/status
+  - consumers
+  - consumers/status
+  - streamtemplates
+  - streamtemplates/status
+  - accounts
+  - accounts/status
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - patch
+  - update
+  - delete
+- apiGroups:
+  - jetstream.nats.io
+  resources:
+  - streams/finalizers
+  - keyvalues/finalizers
+  - objectstores/finalizers
+  - consumers/finalizers
+  - accounts/finalizers
+  verbs:
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jetstream-controller-cluster-role-binding
+subjects:
+- kind: ServiceAccount
+  name: jetstream-controller
+  namespace: bee-substrate
+roleRef:
+  kind: ClusterRole
+  name: jetstream-controller-cluster-role
+  apiGroup: rbac.authorization.k8s.io

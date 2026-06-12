@@ -1,0 +1,22 @@
+# NACK(jetstream-controller) — Stream/Consumer CR → 실제 JetStream 자원으로 reconcile.
+# crds.yaml·rbac.yaml 은 upstream nats-io/nack@v0.23.0 vendoring (rbac 은 ns 만 치환).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jetstream-controller
+  namespace: bee-substrate
+  labels: { app.kubernetes.io/name: jetstream-controller }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: jetstream-controller }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: jetstream-controller }
+    spec:
+      serviceAccountName: jetstream-controller
+      containers:
+        - name: controller
+          image: natsio/jetstream-controller:0.23.0
+          args:
+            - -s=nats://nats.bee-substrate.svc.cluster.local:4222
