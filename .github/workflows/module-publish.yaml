@@ -1,0 +1,92 @@
+# 모듈 publish 재사용 워크플로 (workflow_call) — 모듈 레포는 얇은 caller 만 가진다(G5).
+# 흐름: 이미지 build/push(digest) → bee publish headless(렌더+엔트리+커밋, G5) →
+#       게이트1(kubeconform+conftest — 차단은 여기, 규칙 2) → 통과 시에만 snapshot push.
+# 보안: 모든 보간은 env 경유(인젝션 안전 패턴) — run 블록에 ${{ }} 직접 사용 금지.
+name: module-publish
+on:
+  workflow_call:
+    inputs:
+      module: { required: true, type: string }
+      env: { required: false, type: string, default: dev }
+    secrets:
+      SNAPSHOT_KEY: { required: true }   # bee-snapshot 쓰기 자격증명 (deploy key)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      MODULE: ${{ inputs.module }}
+      TARGET_ENV: ${{ inputs.env }}
+      OWNER: ${{ github.repository_owner }}
+    steps:
+      - name: 모듈 체크아웃
+        uses: actions/checkout@v4
+        with: { path: module }
+
+      - name: ghcr 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 이미지 build/push → digest
+        id: img
+        run: |
+          REF="ghcr.io/$OWNER/bitcert/$MODULE"
+          docker build -t "$REF:sha-${GITHUB_SHA::7}" module
+          docker push "$REF:sha-${GITHUB_SHA::7}"
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REF:sha-${GITHUB_SHA::7}" | cut -d@ -f2)
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "이미지: $REF@$DIGEST"
+
+      - name: core-infra 체크아웃 (chart + 게이트1)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/bee-core-infra
+          path: core-infra
+
+      - name: snapshot 체크아웃 (쓰기 자격증명)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/bee-snapshot
+          path: snapshot
+          ssh-key: ${{ secrets.SNAPSHOT_KEY }}
+
+      - name: bee 설치 (uv tool)
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/uv" tool install "git+https://github.com/$OWNER/bee-cli"
+
+      - name: headless 워크스페이스 구성
+        run: |
+          cat > bee.workspace.yaml <<EOF
+          version: 1
+          snapshot: { repo: snapshot, env: $TARGET_ENV, ref: main }
+          coreInfra: { path: core-infra, platform: bitcert }
+          local:
+            $MODULE: { path: module }
+          EOF
+
+      - name: bee publish (렌더 + 엔트리 + 커밋 — push 는 게이트1 뒤)
+        env:
+          DIGEST: ${{ steps.img.outputs.digest }}
+        run: |
+          git config --global user.name "bee-ci"
+          git config --global user.email "bee-ci@users.noreply.github.com"
+          bee publish "$TARGET_ENV" "$MODULE" --digest "$DIGEST"
+
+      - name: 게이트1 (kubeconform + conftest)
+        run: |
+          curl -sLo /tmp/kc.tgz https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          tar -C /tmp -xzf /tmp/kc.tgz kubeconform && sudo mv /tmp/kubeconform /usr/local/bin/
+          CT_URL=$(curl -s https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep -o 'https://[^"]*Linux_x86_64.tar.gz' | head -1)
+          curl -sLo /tmp/ct.tgz "$CT_URL" && tar -C /tmp -xzf /tmp/ct.tgz conftest && sudo mv /tmp/conftest /usr/local/bin/
+          bash core-infra/ci/gate1.sh "snapshot/envs/$TARGET_ENV"
+
+      - name: snapshot push (게이트1 통과 시에만)
+        run: git -C snapshot push
