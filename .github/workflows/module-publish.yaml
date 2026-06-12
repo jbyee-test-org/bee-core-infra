@@ -62,15 +62,15 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/uv" tool install "git+https://github.com/$OWNER/bee-cli"
 
-      - name: headless 워크스페이스 구성 (chart = OCI 소비, G6 — 모듈 pin 이 --version)
-        env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: headless 워크스페이스 구성
+        # chart 소비: 경로(core-infra 체크아웃). OCI 전환(chartRef)은 GHCR 패키지 권한 정비 후 —
+        # private 패키지는 소유 repo 외 GITHUB_TOKEN 이 읽지 못한다(403). 공개 또는 Actions
+        # access 부여(UI) 뒤 chartRef: "oci://ghcr.io/<org>/charts/bee-module" 로 교체.
         run: |
-          echo "$TOKEN" | helm registry login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           cat > bee.workspace.yaml <<EOF
           version: 1
           snapshot: { repo: snapshot, env: $TARGET_ENV, ref: main }
-          coreInfra: { path: core-infra, platform: bitcert, chartRef: "oci://ghcr.io/$OWNER/charts/bee-module" }
+          coreInfra: { path: core-infra, platform: bitcert }
           local:
             $MODULE: { path: module }
           EOF
