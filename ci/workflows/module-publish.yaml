@@ -1,0 +1,49 @@
+# 모듈 publish 재사용 워크플로 (workflow_call) — 모듈 레포는 이걸 호출하는 얇은 yaml 만 가진다(G5).
+# 흐름: 이미지 build/push(digest 확보) → 렌더(digest pin) → 게이트1 → 스냅샷 커밋(dev 직접, G8).
+# ⚠ 스냅샷 커밋 단계는 `bee publish` headless 로 교체 예정(bee-cli publish 구현 후) — 지금은 자리.
+name: module-publish
+on:
+  workflow_call:
+    inputs:
+      module: { required: true, type: string }
+      env: { required: false, type: string, default: dev }
+    secrets:
+      SNAPSHOT_TOKEN: { required: true }   # bee-snapshot 푸시 권한 PAT
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@v4
+      - name: ghcr 로그인
+        uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - name: 이미지 build/push → digest
+        id: img
+        run: |
+          REF="ghcr.io/${{ github.repository_owner }}/bitcert/${{ inputs.module }}"
+          docker build -t "$REF:sha-${GITHUB_SHA::7}" .
+          docker push "$REF:sha-${GITHUB_SHA::7}"
+          echo "digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$REF:sha-${GITHUB_SHA::7}" | cut -d@ -f2)" >> "$GITHUB_OUTPUT"
+      - name: core-infra 체크아웃 (chart + 게이트1)
+        uses: actions/checkout@v4
+        with: { repository: "${{ github.repository_owner }}/bee-core-infra", path: core-infra }
+      - name: 렌더 (digest pin)
+        run: |
+          mkdir -p out
+          helm template "${{ inputs.module }}" core-infra/chart \
+            -f module.yaml -f "values-${{ inputs.env }}.yaml" \
+            --set "imageDigest=${{ steps.img.outputs.digest }}" > out/rendered.yaml
+      - name: 게이트1 도구 설치
+        run: |
+          go install github.com/yannh/kubeconform/cmd/kubeconform@latest || brew install kubeconform
+          curl -sL "$(curl -s https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep -o 'https://.*Linux_x86_64.tar.gz')" | tar xz conftest && sudo mv conftest /usr/local/bin/
+      # TODO(bee publish): 아래 두 단계는 `bee publish ${{ inputs.env }}` headless 호출로 교체 —
+      # write_entry(리소스별 분할 + module.yaml 사본 + provenance)와 스냅샷 커밋을 CLI 가 수행(G5).
+      - name: 게이트1 (임시 — rendered.yaml 직접)
+        run: |
+          kubeconform -strict -summary out/rendered.yaml
+          conftest test --policy core-infra/ci/policy/manifests out/rendered.yaml
+      - name: 스냅샷 커밋 (자리 — bee publish 로 교체)
+        run: echo "PENDING bee-cli publish (Phase 2 잔여)"
