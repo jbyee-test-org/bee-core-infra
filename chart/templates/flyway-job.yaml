@@ -8,10 +8,10 @@ metadata:
   name: {{ $.Release.Name }}-migrate
   namespace: {{ include "bee.namespace" $ }}
   annotations:
-    # 마이그레이션은 CM(wave 0) 뒤·앱(wave 2) 앞에 — sync-wave 일반 리소스 순서(구 D10 의도).
-    # Job 스펙은 안정(CM 은 name 참조) → 완료 후 Synced 정착. 마이그레이션 내용 변경 시
-    # 재실행(Job 교체)은 Phase 4 — 전역 V-순서와 같은 버킷(실 모듈 압력 시 재론).
-    argocd.argoproj.io/sync-wave: "1"
+    # 마이그레이션 순서 = 의존성 깊이(G14③ cross-module): 의존 모듈이 먼저 migrate 해야
+    # cross-schema grant 성립. migrationWave 는 bee 가 resolver depth 로 주입(배치, namespace 와 동류).
+    # CM(wave 0) < Job(migrationWave≥1) < 앱(wave 50). Job 스펙 안정 → 완료 후 Synced.
+    argocd.argoproj.io/sync-wave: {{ $.Values.migrationWave | default 1 | quote }}
 spec:
   backoffLimit: 6
   template:
