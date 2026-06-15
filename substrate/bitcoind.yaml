@@ -1,0 +1,38 @@
+# bitcoind (regtest) — substrate 애드온. anchoring 의 BITCERT_BITCOIND_RPC_* 의존 충족(G28:
+# module→substrate 의존, 어휘 0 — postgres/nats 처럼 substrate 에 추가, 모듈은 좌표만 받음).
+# 인너루프 검증용 regtest. RPC user/pw = 데모(실환경은 ESO/별도, D13). readyz 의 getblockchaininfo 통과용.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitcoind
+  namespace: bee-substrate
+  labels: { app: bitcoind }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: bitcoind } }
+  template:
+    metadata: { labels: { app: bitcoind } }
+    spec:
+      containers:
+        - name: bitcoind
+          image: lncm/bitcoind:v27.0
+          args:
+            - -regtest
+            - -server
+            - -rpcuser=bee
+            - -rpcpassword=bee-demo
+            - -rpcbind=0.0.0.0
+            - -rpcallowip=0.0.0.0/0
+            - -fallbackfee=0.0002
+          ports:
+            - { name: rpc, containerPort: 18443 }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitcoind
+  namespace: bee-substrate
+spec:
+  selector: { app: bitcoind }
+  ports:
+    - { name: rpc, port: 18443, targetPort: 18443 }
