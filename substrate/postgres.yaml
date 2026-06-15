@@ -10,6 +10,17 @@ stringData:
   POSTGRES_PASSWORD: bee-demo   # 데모 전용 — 공유환경 실값은 ESO+ASM
   POSTGRES_DB: bee
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+  namespace: bee-substrate
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,6 +29,7 @@ metadata:
   labels: { app.kubernetes.io/name: postgres }
 spec:
   replicas: 1
+  strategy: { type: Recreate }   # PVC RWO — 롤링 시 두 pod 가 같은 볼륨 못 붙음
   selector:
     matchLabels: { app.kubernetes.io/name: postgres }
   template:
@@ -29,8 +41,15 @@ spec:
           image: postgres:16-alpine
           envFrom:
             - secretRef: { name: postgres-demo }
+          env:
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }   # subdir — PVC 루트 lost+found 회피
           ports:
             - containerPort: 5432
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: postgres-data }
 ---
 apiVersion: v1
 kind: Service
