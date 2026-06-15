@@ -155,11 +155,16 @@
         },
         "db": {
           "type": "object",
-          "description": "db 어휘(0.3.0, G14) — name=(kind,name) 공유 그룹(B안), migrations=SQL 디렉토리, grants=cross-schema 명시 선언.",
+          "description": "db 어휘(0.4.0, G14·G18) — name=(kind,name) 공유 그룹(B안), schema=owner 소유 스키마 마커(grant 불변식), migrations=SQL 디렉토리, grants=cross-schema 명시 선언.",
           "properties": {
             "name": {
               "type": "string",
               "minLength": 1
+            },
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "이 모듈이 소유(migrations 가 생성)하는 스키마 — cross-schema grant 의 owner 마커(G18①). member 는 생략."
             },
             "migrations": {
               "type": "string"
@@ -244,6 +249,10 @@
     "dbPassword": {
       "type": "string",
       "description": "데모 — 실환경 ESO(D13)"
+    },
+    "dbMigrationsHash": {
+      "type": "string",
+      "description": "마이그레이션 페이로드(SQL+grants) content-hash — bee 가 좌표로 주입(G18②). Flyway Job 이름 접미사가 되어 내용 변경 시에만 재실행. 모듈 파일에 쓰지 않는다."
     }
   }
 }

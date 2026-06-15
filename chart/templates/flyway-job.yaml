@@ -1,12 +1,20 @@
 {{- /* db 어휘 → 모듈별 Flyway Job (G14③ — 모듈별 history, 전역 합집합은 Phase 4 재론).
-       dev 는 ArgoCD PreSync hook(구 D10), 로컬은 bee up 이 적용. SQL 은 bee 가 kubectl
-       위임으로 만든 <module>-migrations ConfigMap(G14②) + chart 파생 grants ConfigMap. */ -}}
+       음수 sync-wave 로 앱(wave 0) 보다 먼저(G15). SQL 은 bee 가 kubectl 위임으로 만든
+       <module>-migrations ConfigMap(G14②) + chart 파생 grants ConfigMap.
+       **Job 이름에 content-hash 접미사(G18②)** — 내용(SQL+grants) 변경 시에만 이름이 바뀌어
+       재실행되고, 무변경이면 같은 이름 = no-op(재실행 루프 없음). 옛 해시 Job 은 prune(아웃터=
+       ArgoCD, 인너=bee up 라벨 셀렉터). dbMigrationsHash 는 bee 가 좌표로 주입(migrationWave 동류). */ -}}
 {{- with .Values.spec.db }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ $.Release.Name }}-migrate
+  name: {{ $.Release.Name }}-migrate{{ with $.Values.dbMigrationsHash }}-{{ . }}{{ end }}
   namespace: {{ include "bee.namespace" $ }}
+  labels:
+    bee.dev/module: {{ $.Release.Name }}
+    {{- with $.Values.dbMigrationsHash }}
+    bee.dev/mighash: {{ . }}
+    {{- end }}
   annotations:
     # 마이그레이션은 **음수 wave** — 앱(wave 0) 보다 먼저, Ingress health 게이트와 무관하게 실행.
     # 순서 = 의존성 깊이(G14③ cross-module): migrationWave = -100 + depth, bee resolver 주입.
