@@ -4,7 +4,7 @@
 apiVersion: jetstream.nats.io/v1beta2
 kind: Consumer
 metadata:
-  name: {{ $.Release.Name }}-{{ .stream | lower }}
+  name: {{ $.Release.Name }}-{{ .stream | lower | replace "_" "-" }}   {{- /* k8s 이름 새니타이즈(언더스코어 불가). streamName 은 원본 */}}
   namespace: {{ include "bee.namespace" $ }}
 spec:
   streamName: {{ .stream }}
