@@ -6,10 +6,6 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}
   namespace: {{ include "bee.namespace" $ }}
-  {{- if .Values.spec.db }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "50"   # 모든 마이그레이션(wave 1..N) 뒤에 배포(구 D10 의도)
-  {{- end }}
   labels:
     app.kubernetes.io/name: {{ .Release.Name }}
 spec:
