@@ -7,8 +7,6 @@
     "metadata",
     "spec",
     "env",
-    "registry",
-    "host",
     "namespace"
   ],
   "properties": {
@@ -26,8 +24,8 @@
     },
     "spec": {
       "type": "object",
+      "description": "image 생략 시 workload 없는 schema 모듈(G21) — Deployment 미렌더, db.migrations 만 소유.",
       "required": [
-        "image",
         "chart"
       ],
       "properties": {

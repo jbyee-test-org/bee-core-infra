@@ -1,4 +1,4 @@
-{{- with (first .Values.spec.routing) }}
+{{- with (.Values.spec.routing | default list | first) }}   {{- /* routing 부재(schema 모듈)면 nil → skip (G21) */}}
 apiVersion: v1
 kind: Service
 metadata:

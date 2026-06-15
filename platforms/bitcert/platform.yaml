@@ -13,7 +13,7 @@ metadata:
   name: bitcert
 spec:
   chart:
-    supported: ">=0.2.0 <0.5.0"   # 0.4.0 additive(G18) — widen 후 스윕(G13·G14·G18)
+    supported: ">=0.2.0 <0.6.0"   # 0.5.0 additive(G21 schema 모듈) — widen(G13·G14·G18·G21)
   envs: [dev, staging, prod]
   products:
     shell: { namespace: ann-platform }      # 공통 셸 제품군 (구 제품명 — 도구 개명과 무관, G4)

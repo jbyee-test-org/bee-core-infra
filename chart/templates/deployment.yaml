@@ -1,4 +1,6 @@
-{{- /* 이미지 = registry(values-env) / image.name(module.yaml) + digest(prod) | tag(local) */ -}}
+{{- /* 이미지 = registry(values-env) / image.name(module.yaml) + digest(prod) | tag(local).
+       image 생략 = **workload 없는 schema 모듈**(G21) → Deployment 렌더 안 함(db.migrations·grants 만 소유). */ -}}
+{{- if .Values.spec.image }}
 {{- $tagref := printf ":%s" (.Values.imageTag | default "latest") -}}
 {{- if .Values.imageDigest }}{{ $tagref = printf "@%s" .Values.imageDigest }}{{ end -}}
 apiVersion: apps/v1
@@ -33,3 +35,4 @@ spec:
             - secretRef:
                 name: {{ .Release.Name }}-secrets
           {{- end }}
+{{- end }}
