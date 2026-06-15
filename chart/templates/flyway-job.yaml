@@ -9,9 +9,9 @@ metadata:
   namespace: {{ include "bee.namespace" $ }}
   annotations:
     # 마이그레이션은 CM(wave 0) 뒤·앱(wave 2) 앞에 — sync-wave 일반 리소스 순서(구 D10 의도).
-    # Replace: 스펙 변경 시 완료된 Job 을 교체(immutable 회피). Flyway history 가 멱등 보장.
+    # Job 스펙은 안정(CM 은 name 참조) → 완료 후 Synced 정착. 마이그레이션 내용 변경 시
+    # 재실행(Job 교체)은 Phase 4 — 전역 V-순서와 같은 버킷(실 모듈 압력 시 재론).
     argocd.argoproj.io/sync-wave: "1"
-    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
   backoffLimit: 6
   template:
