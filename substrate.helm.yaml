@@ -1,0 +1,25 @@
+# substrate-helm 선언 — 정적 매니페스트로 안 떨어지는 substrate 컴포넌트(G26).
+#
+# substrate/ 디렉토리(00-namespace·postgres·nats·nack)는 정적 k8s 매니페스트 →
+# kubectl apply -f substrate/ (인너=bee substrate up · 아웃터=ArgoCD bee-substrate-<env>).
+# 그러나 **Kong 은 helm chart**(CRD·ClusterRole·webhook)라 정적으로 떨구면 fragile.
+# 그래서 helm 으로 위임 적용한다 — `bee substrate up` 이 helm upgrade --install 호출.
+#
+# **합성 0**(G26 — G12③ sharpen): helm 이 렌더하고 bee 는 호출만(kubectl apply 와 동급의 적용 위임).
+# bee 는 derive 하지 않는다. 이 파일은 좌표 데이터일 뿐(규칙 3 — 좌표는 데이터).
+#
+# 위치: substrate/ *밖*. substrate/ 는 ArgoCD app(recurse)이 통째 apply 하므로, helm 좌표
+# 파일을 거기 두면 비-매니페스트라 sync 가 깨진다. 그래서 sibling 으로 둔다.
+#
+# ⚠ 아웃터루프(공유환경)의 Kong 은 현재 수동 helm 릴리스(미선언). 이 선언으로 인너루프는
+# bee substrate up 이 멱등 관리. 아웃터 Kong 의 ArgoCD화(정적 vendoring 또는 helm App + 수동helm
+# 컷오버)는 Stage 4 prep 으로 연기 — 라이브 dev 클러스터 교란 회피(G26).
+apiVersion: bee-substrate/v1
+kind: SubstrateHelm
+releases:
+  - name: kong
+    repoName: kong
+    repo: https://charts.konghq.com
+    chart: ingress
+    version: "0.24.0"          # 현 클러스터 설치 버전(app 3.9). default values(USER-SUPPLIED=null).
+    namespace: kong
