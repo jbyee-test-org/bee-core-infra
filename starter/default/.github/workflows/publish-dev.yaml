@@ -1,15 +1,22 @@
-# 얇은 caller (G5) — 로직은 전부 core-infra 의 재사용 워크플로에. 보간은 env 패턴만.
+# 얇은 caller (G5) — 로직은 core-infra 의 재사용 워크플로에. **빌드는 로컬 단일 모델(G33)**:
+# 빌드=`bee build -e <env> --push`(사설 registry 토큰=로컬), CI 는 digest 로 publish-only(퍼블리셔).
+# image-less(workload 없는 schema/stub 모듈, G21)는 digest 비우고 dispatch.
 name: publish-dev
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
+    inputs:
+      digest:
+        description: "이미지 digest (image 모듈 — 로컬 bee build -e dev --push 산출). image-less 는 비움"
+        required: false
+        type: string
 jobs:
   publish:
     permissions:
       contents: read
       packages: write
     uses: jbyee-test-org/bee-core-infra/.github/workflows/module-publish.yaml@main
-    with: { module: __MODULE__ }
+    with:
+      module: __MODULE__
+      digest: ${{ inputs.digest }}
     secrets:
       SNAPSHOT_KEY: ${{ secrets.SNAPSHOT_DEPLOY_KEY }}
