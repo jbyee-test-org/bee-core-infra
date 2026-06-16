@@ -20,6 +20,9 @@ metadata:
     # 순서 = 의존성 깊이(G14③ cross-module): migrationWave = -100 + depth, bee resolver 주입.
     # CM(-200) < hello(-100) < web(-99) < 앱(0). 의존 모듈이 먼저 migrate → cross-schema grant 성립.
     argocd.argoproj.io/sync-wave: {{ $.Values.migrationWave | default -100 | quote }}
+    # Job 은 immutable — wave/spec 변경(예: 의존 그래프 변경으로 migrationWave 가 SQL 무변경인데 바뀜)을
+    # ArgoCD 가 in-place 갱신 못 해 sync 가 wedge 된다(G32 finding b). Replace=true = delete+recreate.
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   backoffLimit: 6
   template:
