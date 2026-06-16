@@ -1,6 +1,9 @@
 # 모듈 publish 재사용 워크플로 (workflow_call) — 모듈 레포는 얇은 caller 만 가진다(G5).
-# 흐름: 이미지 build/push(digest) → bee publish headless(렌더+엔트리+커밋, G5) →
+# 흐름: digest 결정 → bee publish headless(렌더+엔트리+커밋, G5) →
 #       게이트1(kubeconform+conftest — 차단은 여기, 규칙 2) → 통과 시에만 snapshot push.
+# digest 결정(C 결정) 3-way: ① 사전빌드 digest 입력(빌드는 로컬 `bee build --push` — CI 가 사설
+#   registry[Kellnr] 토큰 미접촉) > ② Dockerfile 있으면 CI 빌드(공개 의존 모듈 hello/web 후방호환) >
+#   ③ image-less(workload 없는 schema 모듈, G21) → digest 없이 publish.
 # 보안: 모든 보간은 env 경유(인젝션 안전 패턴) — run 블록에 ${{ }} 직접 사용 금지.
 name: module-publish
 on:
@@ -8,6 +11,7 @@ on:
     inputs:
       module: { required: true, type: string }
       env: { required: false, type: string, default: dev }
+      digest: { required: false, type: string, default: "" }   # 사전빌드 이미지 digest(C) — 있으면 CI 빌드 생략
     secrets:
       SNAPSHOT_KEY: { required: true }   # bee-snapshot 쓰기 자격증명 (deploy key)
 
@@ -20,6 +24,7 @@ jobs:
     env:
       MODULE: ${{ inputs.module }}
       TARGET_ENV: ${{ inputs.env }}
+      INPUT_DIGEST: ${{ inputs.digest }}
       OWNER: ${{ github.repository_owner }}
     steps:
       - name: 모듈 체크아웃
@@ -33,18 +38,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 이미지 build/push → digest (멱등 — 동일 태그 존재 시 재빌드 없이 digest 재사용, G13)
+      - name: 이미지 digest 결정 (사전빌드 digest(C) > CI 빌드(hello/web) > image-less(G21))
         id: img
         run: |
-          REF="ghcr.io/$OWNER/bitcert/$MODULE"
-          TAG="sha-${GITHUB_SHA::7}"
-          if DIGEST=$(docker buildx imagetools inspect "$REF:$TAG" --format '{{.Manifest.Digest}}' 2>/dev/null); then
-            echo "이미지 재사용(멱등): $REF@$DIGEST — 동일 커밋 재실행이 스냅샷 churn 을 만들지 않는다"
+          if [ -n "$INPUT_DIGEST" ]; then
+            # ① 사전빌드(C) — 로컬 bee build --push 가 사설 registry 토큰으로 빌드+푸시한 digest.
+            #    CI 는 빌더가 아니라 퍼블리셔(G30): Kellnr 토큰 미접촉.
+            echo "사전빌드 digest 사용(C): $INPUT_DIGEST"
+            DIGEST="$INPUT_DIGEST"
+          elif [ -f module/Dockerfile ]; then
+            # ② CI 빌드(공개 의존 — hello/web 후방호환). 멱등: 동일 태그 존재 시 재사용(G13).
+            REF="ghcr.io/$OWNER/bitcert/$MODULE"
+            TAG="sha-${GITHUB_SHA::7}"
+            if DIGEST=$(docker buildx imagetools inspect "$REF:$TAG" --format '{{.Manifest.Digest}}' 2>/dev/null); then
+              echo "이미지 재사용(멱등): $REF@$DIGEST — 동일 커밋 재실행이 스냅샷 churn 을 만들지 않는다"
+            else
+              docker build -t "$REF:$TAG" module
+              docker push "$REF:$TAG"
+              DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REF:$TAG" | cut -d@ -f2)
+              echo "이미지 신규: $REF@$DIGEST"
+            fi
           else
-            docker build -t "$REF:$TAG" module
-            docker push "$REF:$TAG"
-            DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$REF:$TAG" | cut -d@ -f2)
-            echo "이미지 신규: $REF@$DIGEST"
+            # ③ image-less(workload 없는 schema 모듈, G21) — digest 없이 publish(Deployment 미렌더).
+            echo "image-less 모듈($MODULE) — digest 없음(workload 없음, G21)"
+            DIGEST=""
           fi
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
@@ -86,7 +103,12 @@ jobs:
         run: |
           git config --global user.name "bee-ci"
           git config --global user.email "bee-ci@users.noreply.github.com"
-          bee publish "$TARGET_ENV" "$MODULE" --digest "$DIGEST"
+          # image-less(G21)는 digest 없이 — Deployment 미렌더라 digest pin 불요.
+          if [ -n "$DIGEST" ]; then
+            bee publish "$TARGET_ENV" "$MODULE" --digest "$DIGEST"
+          else
+            bee publish "$TARGET_ENV" "$MODULE"
+          fi
 
       - name: 게이트1 (kubeconform + conftest)
         run: |
