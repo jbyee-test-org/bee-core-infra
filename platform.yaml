@@ -16,7 +16,7 @@ metadata:
 spec:
   chart:
     supported: ">=0.2.0 <0.6.0"   # 0.5.0 additive(G21 schema 모듈) — widen(G13·G14·G18·G21)
-  envs: [dev, staging, prod]
+  envs: [dev, prod]   # G51 — staging 제거. 인너루프는 env 아님(SoT 밖, 규칙 7). 중간단은 additive(압력 시 dir 추가)
   products:
     shell: { namespace: ann-platform }      # 공통 셸 제품군 (구 제품명 — 도구 개명과 무관, G4)
     attest: { namespace: bitcert-attest }   # bitcert-attest 제품 (ingestion/batching/…)
