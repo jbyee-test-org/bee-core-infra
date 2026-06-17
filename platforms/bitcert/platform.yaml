@@ -26,3 +26,12 @@ spec:
       events:  { provider: nats }            # NATS + NACK
       routing: { provider: kong }            # Kong ingress
       btc:     { provider: bitcoind }        # bitcoind regtest — anchoring 은 *좌표*로 use(명시 uses 어휘=G28 ②)
+  # ⑤ resources(G37) — 리소스 프로파일(논리명 + default 구체). 모듈은 `spec.uses` 로 *논리 참조*(origin-free,
+  #    규칙 4) → chart 가 룩업·렌더(rule 1). env 미세조정은 values-<env>.resources override(규칙 3 — env差=values).
+  #    선언+렌더이지 프로비저닝 아님(StorageClass 가 볼륨 프로비전, G26). compute=클러스터 용량 · storage=PV.
+  resources:
+    compute:
+      small:  { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 512Mi } }
+      medium: { requests: { cpu: 250m, memory: 256Mi }, limits: { cpu: "1",  memory: 1Gi } }
+    storage:
+      persistent: { storageClass: standard, size: 1Gi }   # kind 기본 SC=standard · 실: gp3 등(values override)

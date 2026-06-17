@@ -6,4 +6,4 @@ description: >-
   시점에 검증하고, 공식 검증은 CI lint(규칙 2). CLI 는 이 차트를 `helm template` 으로
   부를 뿐(기계적 배치). 모듈은 spec.chart.version 으로 이 차트를 pin 한다(G6).
 type: application
-version: 0.5.4   # patch(A안): flyway-job -schemas={db.schema},public(history·search_path 결정화·finding #6 근본책) + Replace=true,Force=true(0.5.3 Replace 단독이 immutable Job 거부—실픽스)
+version: 0.5.5   # minor(G37 P0): spec.uses → platform resources 프로파일 룩업·렌더(compute→resources·storage→PVC+Recreate). additive(uses 없으면 무영향)
