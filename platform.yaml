@@ -29,7 +29,7 @@ spec:
                                              #   리스트 = 지원 target. 모듈이 spec.db.target 으로 *선택*(provider 코덱 dispatch).
                                              #   jdbcPrefix·port = 접속 좌표 데이터(규칙 3 — 차트가 치환, 분기 아님).
         - { target: psql,  provider: postgres, jdbcPrefix: "jdbc:postgresql", port: 5432 }
-        - { target: mysql, provider: mysql,    jdbcPrefix: "jdbc:mysql",      port: 3306 }
+        - { target: mysql, provider: mysql,    jdbcPrefix: "jdbc:mysql",      port: 3306, jdbcParams: "useSSL=false&allowPublicKeyRetrieval=true" }   # 데모 — mysql8 caching_sha2 over plaintext(실환경=TLS)
       routing: { provider: kong }            # 주입형 — 어휘 routing + provider-rendering 코덱(G40, kong↔nginx)
       events:  { provider: nats }            # 접속형(G41·G42) — natsUrl 좌표로 런타임 publish/subscribe.
                                              #   stream 은 발행 앱이 소유(get_or_create_stream). 어휘·codec·NACK 없음.

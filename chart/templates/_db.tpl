@@ -12,21 +12,24 @@
 {{- $db.target | required "spec.db.target 필수(G44 — 기본값 없음). psql|mysql 을 명시하라." -}}
 {{- end -}}
 
-{{- /* provides.db[] 에서 target 매칭 엔트리 → "jdbcPrefix|port"(helm 헬퍼는 문자열만 반환). 미매칭=fail(G36 검증). */ -}}
+{{- /* provides.db[] 에서 target 매칭 엔트리 → "jdbcPrefix|port|params"(helm 헬퍼는 문자열만 반환). 미매칭=fail(G36 검증).
+       jdbcParams = provider별 접속 옵션(예: mysql 의 useSSL·allowPublicKeyRetrieval) — 좌표 데이터(규칙 3), 코덱 분기 아님. */ -}}
 {{- define "bee.db._provider" -}}
 {{- $t := include "bee.db.target" . -}}
 {{- $hit := "" -}}
 {{- range (((.Values.provides | default dict).db) | default list) -}}
-{{- if eq (.target | toString) $t -}}{{- $hit = printf "%s|%v" (.jdbcPrefix | toString) .port -}}{{- end -}}
+{{- if eq (.target | toString) $t -}}{{- $hit = printf "%s|%v|%s" (.jdbcPrefix | toString) .port (.jdbcParams | default "") -}}{{- end -}}
 {{- end -}}
 {{- if not $hit -}}{{- fail (printf "db.target %q ∉ platform provides.db (G44·G36) — platform.yaml 의 provides.db[].target 확인" $t) -}}{{- end -}}
 {{- $hit -}}
 {{- end -}}
 
-{{- /* Flyway -url = provider 데이터(prefix·port) + 모듈 좌표(dbHost·dbName, 규칙 3). 분기 없음. */ -}}
+{{- /* Flyway -url = provider 데이터(prefix·port·params) + 모듈 좌표(dbHost·dbName, 규칙 3). 분기 없음. */ -}}
 {{- define "bee.db.url" -}}
 {{- $e := splitList "|" (include "bee.db._provider" .) -}}
-{{- printf "%s://%s:%s/%s" (index $e 0) (.Values.dbHost | toString) (index $e 1) (.Values.dbName | default "bee") -}}
+{{- $base := printf "%s://%s:%s/%s" (index $e 0) (.Values.dbHost | toString) (index $e 1) (.Values.dbName | default "bee") -}}
+{{- $params := index $e 2 -}}
+{{- if $params }}{{ printf "%s?%s" $base $params }}{{ else }}{{ $base }}{{ end -}}
 {{- end -}}
 
 {{- /* -schemas: psql=schema,public(G34 — search_path 결정화에 public 동반) · mysql=schema(=database, public 없음).
