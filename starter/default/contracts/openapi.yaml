@@ -1,0 +1,15 @@
+# 계약 표면 — HTTP(동기) API. `bee contracts` 가 스냅샷에서 노출(env-pinned), bee 는 운반·노출만(파생 0).
+# 통신 프로토콜(HTTP)이 있으면 반드시 작성·최신화. 없으면 이 파일 삭제 가능(파일 존재 = 계약 있음).
+# 자세히는 contracts/README.md. 이건 모듈간 상호 계약을 확인하기 위한 수단이며 스냅샷에 보관된다.
+openapi: "3.1.0"
+info:
+  title: __MODULE__ HTTP 계약
+  version: "0.1.0"
+  description: __MODULE__ 모듈이 spec.routing 으로 노출하는 동기 API 계약 (작성자가 실제 엔드포인트로 채운다).
+paths:
+  /__MODULE__/v1/example:
+    get:
+      summary: 예시 — 실제 엔드포인트로 교체
+      responses:
+        "200":
+          description: OK

@@ -1,6 +1,7 @@
 # dev 공유환경 Application — 스냅샷이 SoT, ArgoCD 가 유일한 적용자(G5·G7).
-# 소스 = bee-snapshot/envs/dev (Rendered Manifests Pattern). module.yaml·provenance.yaml 은
-# k8s 리소스가 아니므로 제외 — 메타는 bee CLI·게이트가 소비한다(G9).
+# 소스 = bee-snapshot/envs/dev (Rendered Manifests Pattern). module.yaml·provenance.yaml·
+# contracts/ 는 k8s 리소스가 아니므로 제외 — 메타·계약은 bee CLI·게이트가 소비한다(G9·bee contracts).
+# (db/ 는 .sql 이라 ArgoCD directory 가 자동 무시 · contracts/*.yaml 은 YAML 이라 명시 제외 필수.)
 #
 # 알려진 단순화(Phase 3 과제): 렌더에 metadata.namespace 가 없어 destination.namespace 로
 # 일괄 배치 — 다제품(product→ns 다중) 시 chart 가 namespace 를 렌더하도록 확장 필요.
@@ -17,7 +18,7 @@ spec:
     path: envs/dev
     directory:
       recurse: true
-      exclude: "{**/module.yaml,**/provenance.yaml}"
+      exclude: "{**/module.yaml,**/provenance.yaml,**/contracts/**}"
   destination:
     server: https://kubernetes.default.svc
     namespace: bitcert-attest

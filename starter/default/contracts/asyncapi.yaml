@@ -1,0 +1,21 @@
+# 계약 표면 — 이벤트/메시징(비동기). `bee contracts` 가 스냅샷에서 노출(env-pinned), bee 는 운반·노출만(파생 0).
+# 메시징(NATS 등)이 있으면 반드시 작성·최신화. 없으면 이 파일 삭제 가능(파일 존재 = 계약 있음).
+# events 는 접속형(G42) — 모듈이 런타임에 직접 publish/subscribe, 그 *계약*이 여기 표준 AsyncAPI 로 산다.
+# 자세히는 contracts/README.md. 이건 모듈간 상호 계약을 확인하기 위한 수단이며 스냅샷에 보관된다.
+asyncapi: "3.0.0"
+info:
+  title: __MODULE__ 메시징 계약
+  version: "0.1.0"
+  description: __MODULE__ 모듈이 publish/subscribe 하는 subject 계약 (작성자가 실제 subject 로 채운다).
+channels:
+  exampleEvent:
+    address: __MODULE__.example.v1
+    messages:
+      example:
+        payload:
+          type: object
+operations:
+  onExample:
+    action: send
+    channel:
+      $ref: "#/channels/exampleEvent"

@@ -8,13 +8,13 @@ CI_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLATFORM="${2:-$CI_DIR/../platform.yaml}"   # core-infra = 1 플랫폼(G43) — 디스크립터는 레포 루트
 
 echo "── 게이트1: kubeconform (스키마 — CRD 는 datree 카탈로그, 미등재는 통과·conftest 가 보완) ──"
-find "$ENV_DIR" -name '*.yaml' ! -name module.yaml ! -name provenance.yaml -print0 \
+find "$ENV_DIR" -name '*.yaml' ! -name module.yaml ! -name provenance.yaml ! -path '*/contracts/*' -print0 \
   | xargs -0 kubeconform -strict -summary -ignore-missing-schemas \
       -schema-location default \
       -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
 
 echo "── 게이트1: conftest (매니페스트 정책) ──"
-find "$ENV_DIR" -name '*.yaml' ! -name module.yaml ! -name provenance.yaml -print0 \
+find "$ENV_DIR" -name '*.yaml' ! -name module.yaml ! -name provenance.yaml ! -path '*/contracts/*' -print0 \
   | xargs -0 conftest test --policy "$CI_DIR/policy/manifests"
 
 echo "── 게이트1: conftest (provenance 정책, platform=$PLATFORM) ──"
