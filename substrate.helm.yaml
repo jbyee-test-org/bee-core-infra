@@ -23,3 +23,13 @@ releases:
     chart: ingress
     version: "0.24.0"          # 현 클러스터 설치 버전(app 3.9). default values(USER-SUPPLIED=null).
     namespace: kong
+  # routing 코덱(G40) 2nd provider — nginx. **#7: render-proven → live-proven**(kong 과 동렬 substrate).
+  # 모듈은 platform.provides.routing.provider 가 가리키는 1개 provider 로 라우팅(G40 — 플랫폼 선택, 모듈-맹);
+  # nginx 검증은 probe 모듈 values 가 provider=nginx override(낮은우선 -f, 규칙 3 — platform 기본 kong 무영향).
+  # default values — kind LB pending(cosmetic, ClusterIP 로 in-cluster 라우팅 검증). IngressClass `nginx` 자동 생성.
+  - name: ingress-nginx
+    repoName: ingress-nginx
+    repo: https://kubernetes.github.io/ingress-nginx
+    chart: ingress-nginx
+    version: "4.15.1"          # app 1.15.1
+    namespace: ingress-nginx
