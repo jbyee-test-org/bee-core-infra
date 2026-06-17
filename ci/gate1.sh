@@ -21,4 +21,8 @@ echo "── 게이트1: conftest (provenance 정책, platform=$PLATFORM) ──
 find "$ENV_DIR" -name provenance.yaml -print0 \
   | xargs -0 conftest test --policy "$CI_DIR/policy/provenance" --data "$PLATFORM"
 
+echo "── 게이트1: conftest (uses/provides — module.yaml vs platform, G36/G37/G44) ──"
+find "$ENV_DIR" -name module.yaml -print0 \
+  | xargs -0 conftest test --policy "$CI_DIR/policy/capability" --data "$PLATFORM"
+
 echo "✓ 게이트1 통과: $ENV_DIR"
