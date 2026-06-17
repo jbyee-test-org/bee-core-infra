@@ -1,4 +1,6 @@
-# NATS + JetStream — events 어휘(publishes/consumes)의 기반. CR 해석은 NACK(nack/).
+# NATS + JetStream(`-js`) — 접속형 메시징 substrate(G41·G42). 모듈은 natsUrl 좌표로 연결해
+# 런타임에 publish/subscribe 하고, 필요한 stream 은 발행 앱이 JetStream API 로 직접 소유
+# (get_or_create_stream). events 어휘·NACK(CR 브리지)는 G42 에서 제거 — bee 는 stream 에 무관여.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

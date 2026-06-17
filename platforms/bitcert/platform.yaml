@@ -20,12 +20,14 @@ spec:
   products:
     shell: { namespace: ann-platform }      # 공통 셸 제품군 (구 제품명 — 도구 개명과 무관, G4)
     attest: { namespace: bitcert-attest }   # bitcert-attest 제품 (ingestion/batching/…)
-  substrate:
-    provides:                                # capability → provider(①↔③ 바인딩 기록, 현재 단일 provider)
-      db:      { provider: postgres }        # core-infra/substrate/postgres
-      events:  { provider: nats }            # NATS + NACK
-      routing: { provider: kong }            # Kong ingress
-      btc:     { provider: bitcoind }        # bitcoind regtest — anchoring 은 *좌표*로 use(명시 uses 어휘=G28 ②)
+    provides:                                # capability → provider(바인딩 기록, 현재 단일 provider).
+                                             # G41 분류: 주입형(declare-into)=어휘+codec earned · 접속형(connect-to)=좌표만·1급화 X.
+                                             # provides 는 두 종류 다 담되, 1급 어휘(module spec)는 주입형만.
+      db:      { provider: postgres }        # 주입형 — 어휘 db{schema,migrations,grants} + chart 렌더(G14·G18)
+      routing: { provider: kong }            # 주입형 — 어휘 routing + provider-rendering 코덱(G40, kong↔nginx)
+      events:  { provider: nats }            # 접속형(G41·G42) — natsUrl 좌표로 런타임 publish/subscribe.
+                                             #   stream 은 발행 앱이 소유(get_or_create_stream). 어휘·codec·NACK 없음.
+      btc:     { provider: bitcoind }        # 접속형(G41) — RPC 좌표로 use. 명시 uses 어휘 없음(G36 의 btc uses 는 G41 로 철회).
   # ⑤ resources(G37) — 리소스 프로파일(논리명 + default 구체). 모듈은 `spec.uses` 로 *논리 참조*(origin-free,
   #    규칙 4) → chart 가 룩업·렌더(rule 1). env 미세조정은 values-<env>.resources override(규칙 3 — env差=values).
   #    선언+렌더이지 프로비저닝 아님(StorageClass 가 볼륨 프로비전, G26). compute=클러스터 용량 · storage=PV.

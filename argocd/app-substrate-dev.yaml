@@ -21,4 +21,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true   # NACK CRD 가 client-side annotation 한도 초과
+      - ServerSideApply=true   # 도입 사유=NACK CRD client-side 한도(G42 에서 NACK 제거); 옵션은 무해·유지(재적용 안전)

@@ -102,52 +102,6 @@
             }
           }
         },
-        "events": {
-          "type": "object",
-          "description": "이벤트 어휘(0.2.0, G12②) — {stream, subject} 명시 객체. publishes=스트림 소유, consumes=durable Consumer.",
-          "properties": {
-            "publishes": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "required": [
-                  "stream",
-                  "subject"
-                ],
-                "properties": {
-                  "stream": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "subject": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                }
-              }
-            },
-            "consumes": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "required": [
-                  "stream",
-                  "subject"
-                ],
-                "properties": {
-                  "stream": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "subject": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                }
-              }
-            }
-          }
-        },
         "secrets": {
           "type": "array",
           "items": {
