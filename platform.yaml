@@ -20,10 +20,16 @@ spec:
   products:
     shell: { namespace: ann-platform }      # 공통 셸 제품군 (구 제품명 — 도구 개명과 무관, G4)
     attest: { namespace: bitcert-attest }   # bitcert-attest 제품 (ingestion/batching/…)
-    provides:                                # capability → provider(바인딩 기록, 현재 단일 provider).
+  substrate:                                 # ⚠ G42 편집이 이 부모 줄을 떨어뜨려 provides 가 products 밑에 잘못 박혔던 것을
+                                             #   G44 fail-fast 가 적발 → 복구. provides 거처 = spec.substrate.provides(bee 가 여기서 읽음).
+    provides:                                # capability → provider(바인딩 기록).
                                              # G41 분류: 주입형(declare-into)=어휘+codec earned · 접속형(connect-to)=좌표만·1급화 X.
                                              # provides 는 두 종류 다 담되, 1급 어휘(module spec)는 주입형만.
-      db:      { provider: postgres }        # 주입형 — 어휘 db{schema,migrations,grants} + chart 렌더(G14·G18)
+      db:                                    # 주입형 — 어휘 db{target,schema,migrations,grants} + chart 코덱(G14·G18·G44).
+                                             #   리스트 = 지원 target. 모듈이 spec.db.target 으로 *선택*(provider 코덱 dispatch).
+                                             #   jdbcPrefix·port = 접속 좌표 데이터(규칙 3 — 차트가 치환, 분기 아님).
+        - { target: psql,  provider: postgres, jdbcPrefix: "jdbc:postgresql", port: 5432 }
+        - { target: mysql, provider: mysql,    jdbcPrefix: "jdbc:mysql",      port: 3306 }
       routing: { provider: kong }            # 주입형 — 어휘 routing + provider-rendering 코덱(G40, kong↔nginx)
       events:  { provider: nats }            # 접속형(G41·G42) — natsUrl 좌표로 런타임 publish/subscribe.
                                              #   stream 은 발행 앱이 소유(get_or_create_stream). 어휘·codec·NACK 없음.

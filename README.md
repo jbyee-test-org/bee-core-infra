@@ -1,11 +1,13 @@
 # core-infra — bee 플랫폼 공용 인프라 (chart · 정책 · starter)
 
 > 단일 기준은 워크스페이스의 `GENESIS.md`. 이 레포는 G5 가 정의한 고정 3 레포 중 하나.
+> **core-infra = 1 플랫폼**(G43 — 멀티플랫폼은 멀티레포 축, G3; 별 플랫폼은 자기 `*-core-infra` 레포).
 
 | 디렉토리 | 내용 | 상태 |
 |---|---|---|
-| `chart/` | `bee-module` 공용 차트 — **파생 엔진**(규칙 1). `values.schema.json` = 입력 계약(G9) | 0.1.0 |
-| `platforms/<name>/platform.yaml` | 플랫폼 디스크립터 — chart 지원 범위 정책(G6) + products→namespace 배치 데이터. **좌표 파생 없음** | bitcert |
+| `chart/` | `bee-module` 공용 차트 — **파생 엔진**(규칙 1). `values.schema.json` = 입력 계약(G9) | 0.5.7 |
+| `platform.yaml` (루트) | 플랫폼 디스크립터 — chart 지원 범위 정책(G6) + products→namespace 배치 + substrate.provides/resources(G36/G38). **좌표 파생 없음**. 이름=`metadata.name`(G43) | bitcert |
+| `substrate/` · `substrate-outer/` | 접속형/주입형 substrate 정적 매니페스트(postgres·nats·bitcoind·ESO, G26·G42) + helm 위임(`substrate.helm.yaml`) | live |
 | `starter/` | 모듈 starter 데이터 — chart 와 공동 버전(G5). `bee new` 가 복사+치환+등록 | Phase 3 슬롯 |
 | `ci/` | 재사용 CI 워크플로(렌더·lint·publish) + ArgoCD 정의 | Phase 2 슬롯 |
 

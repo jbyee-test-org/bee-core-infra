@@ -6,4 +6,4 @@ description: >-
   시점에 검증하고, 공식 검증은 CI lint(규칙 2). CLI 는 이 차트를 `helm template` 으로
   부를 뿐(기계적 배치). 모듈은 spec.chart.version 으로 이 차트를 pin 한다(G6).
 type: application
-version: 0.5.7   # minor(G42): events 어휘·렌더 제거(stream.yaml·consumer.yaml·schema events 블록). events=접속형(connect-to) — 앱이 stream 소유. events 미선언 모듈엔 backward compat(`with` 가드였음)
+version: 0.5.8   # minor(G44): db provider 코덱(_db.tpl) — postgres↔mysql, 모듈-선택 db.target(필수). flyway-job/grants 가 target 으로 dispatch. psql backward-compat 동일 출력. (0.5.7=G42 events 제거)

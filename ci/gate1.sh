@@ -5,7 +5,7 @@ set -euo pipefail
 
 ENV_DIR="$1"
 CI_DIR="$(cd "$(dirname "$0")" && pwd)"
-PLATFORM="${2:-$CI_DIR/../platforms/bitcert/platform.yaml}"
+PLATFORM="${2:-$CI_DIR/../platform.yaml}"   # core-infra = 1 플랫폼(G43) — 디스크립터는 레포 루트
 
 echo "── 게이트1: kubeconform (스키마 — CRD 는 datree 카탈로그, 미등재는 통과·conftest 가 보완) ──"
 find "$ENV_DIR" -name '*.yaml' ! -name module.yaml ! -name provenance.yaml -print0 \

@@ -122,8 +122,13 @@
         },
         "db": {
           "type": "object",
-          "description": "db 어휘(0.4.0, G14·G18) — name=(kind,name) 공유 그룹(B안), schema=owner 소유 스키마 마커(grant 불변식), migrations=SQL 디렉토리, grants=cross-schema 명시 선언.",
+          "description": "db 어휘(0.4.0, G14·G18 · target=G44) — target=db 방언(모듈-선택, 기본값 없음·필수), name=(kind,name) 공유 그룹(B안), schema=owner 소유 스키마 마커(grant 불변식), migrations=SQL 디렉토리, grants=cross-schema 명시 선언.",
           "properties": {
+            "target": {
+              "type": "string",
+              "enum": ["psql", "mysql"],
+              "description": "db 방언(G44) — 모듈이 *선택*(자기 SQL 이 방언-종속). platform provides.db[].target 에 매칭. 기본값 없음 — 미선언 시 실패."
+            },
             "name": {
               "type": "string",
               "minLength": 1
@@ -158,7 +163,8 @@
             }
           },
           "required": [
-            "name"
+            "name",
+            "target"
           ]
         }
       }
