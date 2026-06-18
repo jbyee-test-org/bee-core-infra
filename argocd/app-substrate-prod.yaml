@@ -1,0 +1,26 @@
+# prod substrate Application (G7·G12③·#3 Tier 2) — substrate 의 SoT 는 core-infra(선언 데이터).
+# app-substrate-dev 와 동형 — 렌더 산출물이 아니라 core-infra/substrate 를 직접 watch.
+# 각 클러스터의 ArgoCD 가 자기 클러스터(in-cluster)에 적용(prod 클러스터 = kind-bee-prod).
+# Kong/nginx(helm) 은 이 path 밖 — substrate.helm.yaml(별도 helm 적용, G26).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bee-substrate-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jbyee-test-org/bee-core-infra
+    targetRevision: main
+    path: substrate
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true   # 정적 substrate 재적용 안전(dev 동형 — 구 NACK CRD 한도 사유, 무해 유지)
