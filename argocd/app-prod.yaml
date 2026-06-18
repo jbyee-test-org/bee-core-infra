@@ -1,0 +1,30 @@
+# prod 공유환경 Application (G51/G52) — 스냅샷이 SoT, ArgoCD 가 유일 적용자(G5·G7).
+# 소스 = bee-snapshot/envs/prod. module.yaml·provenance.yaml·contracts/ 제외(k8s 리소스 아님, G9·G48).
+#
+# **작성만 — 적용은 Tier 2**(prod 클러스터 kind-bee-prod 의 ArgoCD 에 적용). app-dev 와 동형:
+#   prod 는 별도 클러스터(G51 결정 A — 렌더가 namespace 박으므로 같은 ns 충돌 회피·env=클러스터 격리).
+#   destination=in-cluster 는 "prod 클러스터의 ArgoCD 가 자기 클러스터에 적용" 모델.
+# **쓰기 게이트(G8)**: envs/prod 변경은 PR + CODEOWNERS 승인(prod=PR, dev=CI직접). 승격 = dev 핀 복사(promote).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bee-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jbyee-test-org/bee-snapshot
+    targetRevision: main
+    path: envs/prod
+    directory:
+      recurse: true
+      exclude: "{**/module.yaml,**/provenance.yaml,**/contracts/**}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bitcert-attest
+  syncPolicy:
+    automated:
+      prune: true        # 스냅샷에서 사라진 모듈 = 클러스터에서 제거 (SoT 일치)
+      selfHeal: true     # 드리프트 자동 복원 — ArgoCD 네이티브 위임
+    syncOptions:
+      - CreateNamespace=true

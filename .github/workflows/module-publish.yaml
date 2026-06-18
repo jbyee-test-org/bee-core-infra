@@ -88,10 +88,11 @@ jobs:
           git config --global user.name "bee-ci"
           git config --global user.email "bee-ci@users.noreply.github.com"
           # image-less(G21)는 digest 없이 — Deployment 미렌더라 digest pin 불요.
+          # snap -e <env> (G52 — 구 publish): dev=사다리 맨앞이라 --digest 빌드 핀.
           if [ -n "$DIGEST" ]; then
-            bee publish "$TARGET_ENV" "$MODULE" --digest "$DIGEST"
+            bee snap -e "$TARGET_ENV" "$MODULE" --digest "$DIGEST"
           else
-            bee publish "$TARGET_ENV" "$MODULE"
+            bee snap -e "$TARGET_ENV" "$MODULE"
           fi
 
       - name: 게이트1 (kubeconform + conftest)
