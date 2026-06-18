@@ -1,5 +1,4 @@
 env: dev
-registry: ghcr.io/jbyee-test-org/bitcert   # 데모 미러(G10) — 실 org 도입 시 교체
 imageDigest: ""                 # CI 가 publish 시 주입
 host: __MODULE__.dev.bitcert.test
 ingressClass: kong

@@ -78,6 +78,7 @@ jobs:
           version: 1
           snapshot: { repo: snapshot, env: $TARGET_ENV, ref: main }
           coreInfra: { path: core-infra, platform: bitcert, chartRef: "oci://ghcr.io/$OWNER/charts/bee-module" }
+          imageRegistry: ghcr.io/$OWNER/bitcert
           local:
             $MODULE: { path: module }
           EOF
