@@ -22,9 +22,9 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: bitcert-attest
+  # **manual sync 포스처(G53)** — automated 없음(app-dev 동형). `bee sync prod` 가 유일 배포 트리거(배포 게이트).
+  #   prod 는 더더욱 manual 이 맞다 — 승격은 검증된 핀의 *의도된* 반영(PR 게이트 G8 후 명시 sync, 규칙 8).
+  #   prune/selfHeal → `bee sync` operation 으로 명시(기본 prune on). (적용은 Tier 2 — kind-bee-prod.)
   syncPolicy:
-    automated:
-      prune: true        # 스냅샷에서 사라진 모듈 = 클러스터에서 제거 (SoT 일치)
-      selfHeal: true     # 드리프트 자동 복원 — ArgoCD 네이티브 위임
     syncOptions:
       - CreateNamespace=true

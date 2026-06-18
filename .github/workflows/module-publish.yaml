@@ -26,6 +26,7 @@ jobs:
       TARGET_ENV: ${{ inputs.env }}
       INPUT_DIGEST: ${{ inputs.digest }}
       OWNER: ${{ github.repository_owner }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # crane ghcr 인증(digest 존재 게이트, G53) — private 이미지 read
     steps:
       - name: 모듈 체크아웃
         uses: actions/checkout@v4
@@ -95,12 +96,17 @@ jobs:
             bee snap -e "$TARGET_ENV" "$MODULE"
           fi
 
-      - name: 게이트1 (kubeconform + conftest)
+      - name: 게이트1 (kubeconform + conftest + crane digest 존재)
         run: |
           curl -sLo /tmp/kc.tgz https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
           tar -C /tmp -xzf /tmp/kc.tgz kubeconform && sudo mv /tmp/kubeconform /usr/local/bin/
           CT_URL=$(curl -s https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep -o 'https://[^"]*Linux_x86_64.tar.gz' | head -1)
           curl -sLo /tmp/ct.tgz "$CT_URL" && tar -C /tmp -xzf /tmp/ct.tgz conftest && sudo mv /tmp/conftest /usr/local/bin/
+          # crane — digest 존재 게이트(G53, phantom pin 방어). ghcr 인증(private 슬라이스 이미지 read).
+          # 인증 username 은 임의(토큰 auth) — OWNER 재사용(github.actor 미사용, 인젝션 표면 0).
+          CR_URL=$(curl -s https://api.github.com/repos/google/go-containerregistry/releases/latest | grep -o 'https://[^"]*go-containerregistry_Linux_x86_64.tar.gz' | head -1)
+          curl -sLo /tmp/cr.tgz "$CR_URL" && tar -C /tmp -xzf /tmp/cr.tgz crane && sudo mv /tmp/crane /usr/local/bin/
+          printf '%s' "$GH_TOKEN" | crane auth login ghcr.io -u "$OWNER" --password-stdin
           # 게이트 스코프 = 이번에 publish 된 모듈 엔트리만 — 남의 구 엔트리로 내 CI 가
           # 죽으면 모듈 단위 bump 스윕이 불가능(닭-달걀). env 전반 정합은 별도 관심사.
           bash core-infra/ci/gate1.sh "snapshot/envs/$TARGET_ENV/$MODULE"

@@ -25,4 +25,27 @@ echo "── 게이트1: conftest (uses/provides — module.yaml vs platform, G3
 find "$ENV_DIR" -name module.yaml -print0 \
   | xargs -0 conftest test --policy "$CI_DIR/policy/capability" --data "$PLATFORM"
 
+# digest 존재(phantom pin 방어, G53) — 렌더된 매니페스트가 pin 한 이미지 digest 가 registry 에
+# *실재*하는지 crane 으로 확인(없으면 ImagePullBackOff). image-less(G21)는 참조 0 → skip.
+# crane 미설치면 관용(로컬 gate1 실행 무해) — CI(module-publish.yaml)가 crane 설치+ghcr 인증.
+echo "── 게이트1: 이미지 digest 존재 (crane — phantom pin 방어, G53) ──"
+if command -v crane >/dev/null 2>&1; then
+  REFS=$(grep -rhoE 'image:[[:space:]]*[^[:space:]]+@sha256:[0-9a-f]+' "$ENV_DIR" \
+         | sed -E 's/^image:[[:space:]]*//' | sort -u || true)
+  if [ -z "$REFS" ]; then
+    echo "  (digest-pin 이미지 참조 없음 — image-less 모듈, G21) skip"
+  else
+    for ref in $REFS; do
+      if crane manifest "$ref" >/dev/null 2>&1; then
+        echo "  ✓ 실재: $ref"
+      else
+        echo "::error::digest 미실재(phantom pin) — $ref : registry 에 없음(빌드·push 누락?). ImagePullBackOff 위험."
+        exit 1
+      fi
+    done
+  fi
+else
+  echo "  ⚠ crane 미설치 — digest 존재 게이트 skip(로컬 실행). CI 는 crane 설치 필수."
+fi
+
 echo "✓ 게이트1 통과: $ENV_DIR"
